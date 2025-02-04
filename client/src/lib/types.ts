@@ -9,6 +9,32 @@ export interface Recipe {
   tags: string[];
   ingredients: Ingredient[];
   instructions: string[];
+  nutrition?: {
+    calories: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
+    vitamins: {
+      a?: number;
+      c?: number;
+      d?: number;
+      e?: number;
+      k?: number;
+      b1?: number;
+      b2?: number;
+      b3?: number;
+      b6?: number;
+      b12?: number;
+    };
+    minerals: {
+      calcium?: number;
+      iron?: number;
+      magnesium?: number;
+      potassium?: number;
+      zinc?: number;
+    };
+  };
 }
 
 export interface Ingredient {
@@ -37,4 +63,5 @@ export interface RecipeFormData {
   tags: string[];
   ingredients: Ingredient[];
   instructions: string[];
+  nutrition?: Recipe['nutrition'];
 }

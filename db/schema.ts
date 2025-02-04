@@ -15,7 +15,33 @@ export const recipes = pgTable("recipes", {
     quantity: number;
     unit: string;
   }[]>().default([]),
-  instructions: jsonb("instructions").$type<string[]>().default([])
+  instructions: jsonb("instructions").$type<string[]>().default([]),
+  nutrition: jsonb("nutrition").$type<{
+    calories: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
+    vitamins: {
+      a?: number;
+      c?: number;
+      d?: number;
+      e?: number;
+      k?: number;
+      b1?: number;
+      b2?: number;
+      b3?: number;
+      b6?: number;
+      b12?: number;
+    };
+    minerals: {
+      calcium?: number;
+      iron?: number;
+      magnesium?: number;
+      potassium?: number;
+      zinc?: number;
+    };
+  }>()
 });
 
 export const shoppingLists = pgTable("shopping_lists", {

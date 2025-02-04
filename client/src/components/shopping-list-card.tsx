@@ -26,6 +26,7 @@ interface RecipeSuggestion {
   recipe: Recipe;
   similarity: number;
   matchingIngredients: string[];
+  nutritionalBalance: number;
 }
 
 export default function ShoppingListCard({ list, onUpdate, onDelete }: ShoppingListCardProps) {
@@ -161,7 +162,7 @@ export default function ShoppingListCard({ list, onUpdate, onDelete }: ShoppingL
             <div className="space-y-4">
               {suggestions.length > 0 ? (
                 <div className="space-y-2">
-                  {suggestions.map(({ recipe, similarity, matchingIngredients }) => (
+                  {suggestions.map(({ recipe, similarity, matchingIngredients, nutritionalBalance }) => (
                     <div key={recipe.id} className="flex items-center gap-2 p-2 rounded border">
                       <input
                         type="checkbox"
@@ -179,6 +180,17 @@ export default function ShoppingListCard({ list, onUpdate, onDelete }: ShoppingL
                         <div className="text-sm text-muted-foreground">
                           {Math.round(similarity * 100)}% match ({matchingIngredients.length} shared ingredients)
                         </div>
+                        {recipe.nutrition && (
+                          <div className="text-sm text-muted-foreground">
+                            Nutritional Balance: {Math.round(nutritionalBalance * 100)}%
+                            <div className="text-xs">
+                              {recipe.nutrition.calories} cal | 
+                              P: {recipe.nutrition.protein}g | 
+                              C: {recipe.nutrition.carbohydrates}g | 
+                              F: {recipe.nutrition.fat}g
+                            </div>
+                          </div>
+                        )}
                       </div>
                       <Input
                         type="number"

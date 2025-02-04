@@ -4,6 +4,35 @@ import { db } from "@db";
 import { eq } from "drizzle-orm";
 import { recipes, shoppingLists, shoppingListRecipes } from "@db/schema";
 
+// Helper function to calculate nutritional balance score
+function calculateNutritionalScore(recipe: any, targetNutrition: any = null) {
+  if (!recipe.nutrition) return 0;
+
+  // Default balanced nutrition targets (percentages of daily values)
+  const defaultTargets = {
+    protein: 20, // 20% of calories from protein
+    carbohydrates: 50, // 50% of calories from carbs
+    fat: 30, // 30% of calories from fat
+    fiber: 25, // 25g per day
+  };
+
+  const targets = targetNutrition || defaultTargets;
+
+  // Calculate macro balance score
+  const macroScore = (1 - Math.abs(recipe.nutrition.protein / recipe.nutrition.calories * 100 - targets.protein) / 100) +
+                    (1 - Math.abs(recipe.nutrition.carbohydrates / recipe.nutrition.calories * 100 - targets.carbohydrates) / 100) +
+                    (1 - Math.abs(recipe.nutrition.fat / recipe.nutrition.calories * 100 - targets.fat) / 100);
+
+  // Calculate micronutrient diversity score
+  const vitamins = recipe.nutrition.vitamins || {};
+  const minerals = recipe.nutrition.minerals || {};
+  const micronutrientCount = Object.keys(vitamins).length + Object.keys(minerals).length;
+  const microScore = micronutrientCount / 15; // Normalize by maximum possible micronutrients
+
+  // Combine scores (70% macro balance, 30% micronutrient diversity)
+  return (macroScore * 0.7 + microScore * 0.3);
+}
+
 export function registerRoutes(app: Express): Server {
   // Recipe routes
   app.get("/api/recipes", async (_req, res) => {
@@ -128,12 +157,20 @@ export function registerRoutes(app: Express): Server {
           const matchingIngredients = Array.from(recipeIngredients)
             .filter(ing => currentIngredients.has(ing));
 
-          const similarity = matchingIngredients.length / recipeIngredients.size;
+          // Calculate ingredient similarity
+          const ingredientSimilarity = matchingIngredients.length / recipeIngredients.size;
+
+          // Calculate nutritional balance score
+          const nutritionalScore = calculateNutritionalScore(recipe);
+
+          // Combined score: 60% ingredient similarity, 40% nutritional balance
+          const combinedScore = (ingredientSimilarity * 0.6) + (nutritionalScore * 0.4);
 
           return {
             recipe,
-            similarity,
-            matchingIngredients
+            similarity: combinedScore,
+            matchingIngredients,
+            nutritionalBalance: nutritionalScore
           };
         })
         .filter(({ similarity }) => similarity > 0)

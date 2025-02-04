@@ -10,6 +10,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Plus, Minus } from "lucide-react";
 import type { RecipeFormData } from "@/lib/types";
 
@@ -34,6 +40,15 @@ export default function RecipeForm({
       tags: [],
       ingredients: [{ name: "", quantity: 1, unit: "" }],
       instructions: [""],
+      nutrition: {
+        calories: 0,
+        protein: 0,
+        carbohydrates: 0,
+        fat: 0,
+        fiber: 0,
+        vitamins: {},
+        minerals: {}
+      },
       ...defaultValues,
     },
   });
@@ -47,7 +62,7 @@ export default function RecipeForm({
   const { fields: instructionFields, append: appendInstruction, remove: removeInstruction } = 
     useFieldArray({
       control: form.control,
-      name: "instructions" as const,
+      name: "instructions",
     });
 
   return (
@@ -124,6 +139,137 @@ export default function RecipeForm({
             )}
           />
         </div>
+
+        <Accordion type="single" collapsible className="w-full">
+          <AccordionItem value="nutrition">
+            <AccordionTrigger>Nutritional Information</AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-4">
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <FormField
+                    control={form.control}
+                    name="nutrition.calories"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Calories</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nutrition.protein"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Protein (g)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nutrition.carbohydrates"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Carbohydrates (g)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nutrition.fat"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fat (g)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="nutrition.fiber"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Fiber (g)</FormLabel>
+                        <FormControl>
+                          <Input type="number" min="0" step="0.1" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <Accordion type="single" collapsible className="w-full">
+                  <AccordionItem value="vitamins">
+                    <AccordionTrigger>Vitamins</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {['a', 'c', 'd', 'e', 'k', 'b1', 'b2', 'b3', 'b6', 'b12'].map((vitamin) => (
+                          <FormField
+                            key={vitamin}
+                            control={form.control}
+                            name={`nutrition.vitamins.${vitamin}`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Vitamin {vitamin.toUpperCase()} (mg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="0" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  <AccordionItem value="minerals">
+                    <AccordionTrigger>Minerals</AccordionTrigger>
+                    <AccordionContent>
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {['calcium', 'iron', 'magnesium', 'potassium', 'zinc'].map((mineral) => (
+                          <FormField
+                            key={mineral}
+                            control={form.control}
+                            name={`nutrition.minerals.${mineral}`}
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>{mineral.charAt(0).toUpperCase() + mineral.slice(1)} (mg)</FormLabel>
+                                <FormControl>
+                                  <Input type="number" min="0" step="0.01" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
 
         <div>
           <h3 className="text-lg font-medium mb-4">Ingredients</h3>

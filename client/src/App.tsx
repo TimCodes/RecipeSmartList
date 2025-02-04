@@ -8,6 +8,7 @@ import RecipeList from "@/pages/recipes/index";
 import CreateRecipe from "@/pages/recipes/create";
 import RecipeDetails from "@/pages/recipes/[id]";
 import ShoppingLists from "@/pages/shopping-lists/index";
+import Ingredients from "@/pages/ingredients/index";
 
 function Router() {
   return (
@@ -19,6 +20,7 @@ function Router() {
           <Route path="/recipes/create" component={CreateRecipe} />
           <Route path="/recipes/:id" component={RecipeDetails} />
           <Route path="/shopping-lists" component={ShoppingLists} />
+          <Route path="/ingredients" component={Ingredients} />
           <Route component={NotFound} />
         </Switch>
       </main>

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { BookOpen, ShoppingCart } from "lucide-react";
+import { BookOpen, ShoppingCart, Apple } from "lucide-react";
 
 export default function Nav() {
   return (
@@ -17,6 +17,15 @@ export default function Nav() {
             className="text-sm font-medium transition-colors hover:text-primary"
           >
             Recipes
+          </Link>
+          <Link 
+            href="/ingredients"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            <div className="flex items-center space-x-1">
+              <Apple className="h-4 w-4" />
+              <span>Ingredients</span>
+            </div>
           </Link>
           <Link 
             href="/shopping-lists"

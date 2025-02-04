@@ -1,5 +1,39 @@
-import { pgTable, text, serial, integer, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, jsonb, real } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
+
+export const ingredients = pgTable("ingredients", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  category: text("category"),
+  servingSize: real("serving_size"),
+  servingUnit: text("serving_unit"),
+  nutrition: jsonb("nutrition").$type<{
+    calories: number;
+    protein: number;
+    carbohydrates: number;
+    fat: number;
+    fiber: number;
+    vitamins: {
+      a?: number;
+      c?: number;
+      d?: number;
+      e?: number;
+      k?: number;
+      b1?: number;
+      b2?: number;
+      b3?: number;
+      b6?: number;
+      b12?: number;
+    };
+    minerals: {
+      calcium?: number;
+      iron?: number;
+      magnesium?: number;
+      potassium?: number;
+      zinc?: number;
+    };
+  }>()
+});
 
 export const recipes = pgTable("recipes", {
   id: serial("id").primaryKey(),
@@ -61,6 +95,11 @@ export const shoppingListRecipes = pgTable("shopping_list_recipes", {
   recipeId: integer("recipe_id").notNull().references(() => recipes.id, { onDelete: 'cascade' }),
   servings: integer("servings").notNull()
 });
+
+export const insertIngredientSchema = createInsertSchema(ingredients);
+export const selectIngredientSchema = createSelectSchema(ingredients);
+export type Ingredient = typeof ingredients.$inferSelect;
+export type InsertIngredient = typeof ingredients.$inferInsert;
 
 export const insertRecipeSchema = createInsertSchema(recipes);
 export const selectRecipeSchema = createSelectSchema(recipes);

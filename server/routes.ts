@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
-import { recipes, shoppingLists, shoppingListRecipes } from "@db/schema";
+import { recipes, shoppingLists, shoppingListRecipes, ingredients } from "@db/schema";
 
 // Helper function to calculate nutritional balance score
 function calculateNutritionalScore(recipe: any, targetNutrition: any = null) {
@@ -34,6 +34,55 @@ function calculateNutritionalScore(recipe: any, targetNutrition: any = null) {
 }
 
 export function registerRoutes(app: Express): Server {
+  // Ingredient routes
+  app.get("/api/ingredients", async (_req, res) => {
+    const allIngredients = await db.query.ingredients.findMany({
+      orderBy: (ingredients, { asc }) => [asc(ingredients.name)]
+    });
+    res.json(allIngredients);
+  });
+
+  app.post("/api/ingredients", async (req, res) => {
+    const ingredient = req.body;
+    const newIngredient = await db.insert(ingredients).values(ingredient).returning();
+    res.json(newIngredient[0]);
+  });
+
+  app.get("/api/ingredients/:id", async (req, res) => {
+    const ingredient = await db.query.ingredients.findFirst({
+      where: eq(ingredients.id, parseInt(req.params.id))
+    });
+
+    if (!ingredient) {
+      return res.status(404).json({ message: "Ingredient not found" });
+    }
+
+    res.json(ingredient);
+  });
+
+  app.put("/api/ingredients/:id", async (req, res) => {
+    const ingredient = await db.query.ingredients.findFirst({
+      where: eq(ingredients.id, parseInt(req.params.id))
+    });
+
+    if (!ingredient) {
+      return res.status(404).json({ message: "Ingredient not found" });
+    }
+
+    const updatedIngredient = await db
+      .update(ingredients)
+      .set(req.body)
+      .where(eq(ingredients.id, parseInt(req.params.id)))
+      .returning();
+
+    res.json(updatedIngredient[0]);
+  });
+
+  app.delete("/api/ingredients/:id", async (req, res) => {
+    await db.delete(ingredients).where(eq(ingredients.id, parseInt(req.params.id)));
+    res.status(204).end();
+  });
+
   // Recipe routes
   app.get("/api/recipes", async (_req, res) => {
     const allRecipes = await db.query.recipes.findMany();

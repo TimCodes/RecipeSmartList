@@ -87,9 +87,13 @@ export function registerRoutes(app: Express): Server {
       return res.status(404).json({ message: "Shopping list not found" });
     }
 
+    const { updatedAt, ...updateData } = req.body;
     const updatedList = await db
       .update(shoppingLists)
-      .set(req.body)
+      .set({
+        ...updateData,
+        updatedAt: sql`CURRENT_TIMESTAMP`
+      })
       .where(eq(shoppingLists.id, parseInt(req.params.id)))
       .returning();
 

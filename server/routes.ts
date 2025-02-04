@@ -115,8 +115,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Shopping list not found" });
       }
 
-      // Get ingredient names from the current shopping list
-      const currentIngredients = new Set(list.items.map(item => item.name.toLowerCase()));
+      // Get ingredient names from the current shopping list, with null check
+      const items = list.items || [];
+      const currentIngredients = new Set(items.map(item => item.name.toLowerCase()));
 
       // Get all recipes
       const allRecipes = await db.query.recipes.findMany();
@@ -124,12 +125,13 @@ export function registerRoutes(app: Express): Server {
       // Calculate similarity scores for each recipe
       const suggestedRecipes = allRecipes
         .map(recipe => {
+          const ingredients = recipe.ingredients || [];
           const recipeIngredients = new Set(
-            recipe.ingredients.map(ing => ing.name.toLowerCase())
+            ingredients.map(ing => ing.name.toLowerCase())
           );
 
-          // Count matching ingredients
-          const matchingIngredients = [...recipeIngredients]
+          // Count matching ingredients using Array.from instead of spread
+          const matchingIngredients = Array.from(recipeIngredients)
             .filter(ing => currentIngredients.has(ing));
 
           const similarity = matchingIngredients.length / recipeIngredients.size;

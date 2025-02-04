@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
 import { recipes, shoppingLists, shoppingListRecipes } from "@db/schema";
+import { sql } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   // Recipe routes
@@ -21,11 +22,11 @@ export function registerRoutes(app: Express): Server {
     const recipe = await db.query.recipes.findFirst({
       where: eq(recipes.id, parseInt(req.params.id))
     });
-    
+
     if (!recipe) {
       return res.status(404).json({ message: "Recipe not found" });
     }
-    
+
     res.json(recipe);
   });
 
@@ -33,7 +34,7 @@ export function registerRoutes(app: Express): Server {
     const recipe = await db.query.recipes.findFirst({
       where: eq(recipes.id, parseInt(req.params.id))
     });
-    
+
     if (!recipe) {
       return res.status(404).json({ message: "Recipe not found" });
     }
@@ -43,7 +44,7 @@ export function registerRoutes(app: Express): Server {
       .set(req.body)
       .where(eq(recipes.id, parseInt(req.params.id)))
       .returning();
-      
+
     res.json(updatedRecipe[0]);
   });
 
@@ -60,7 +61,7 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/shopping-lists", async (req, res) => {
     const { recipes: recipeIds, ...list } = req.body;
-    
+
     const newList = await db.insert(shoppingLists).values(list).returning();
     const listId = newList[0].id;
 
@@ -81,7 +82,7 @@ export function registerRoutes(app: Express): Server {
     const list = await db.query.shoppingLists.findFirst({
       where: eq(shoppingLists.id, parseInt(req.params.id))
     });
-    
+
     if (!list) {
       return res.status(404).json({ message: "Shopping list not found" });
     }
@@ -91,13 +92,66 @@ export function registerRoutes(app: Express): Server {
       .set(req.body)
       .where(eq(shoppingLists.id, parseInt(req.params.id)))
       .returning();
-      
+
     res.json(updatedList[0]);
   });
 
   app.delete("/api/shopping-lists/:id", async (req, res) => {
     await db.delete(shoppingLists).where(eq(shoppingLists.id, parseInt(req.params.id)));
     res.status(204).end();
+  });
+
+  // New route for recipe suggestions
+  app.get("/api/shopping-lists/:id/suggestions", async (req, res) => {
+    try {
+      const listId = parseInt(req.params.id);
+
+      // Get current shopping list with its items
+      const list = await db.query.shoppingLists.findFirst({
+        where: eq(shoppingLists.id, listId)
+      });
+
+      if (!list) {
+        return res.status(404).json({ message: "Shopping list not found" });
+      }
+
+      // Get ingredient names from the current shopping list
+      const currentIngredients = new Set(list.items.map(item => item.name.toLowerCase()));
+
+      // Get all recipes
+      const allRecipes = await db.query.recipes.findMany();
+
+      // Calculate similarity scores for each recipe
+      const suggestedRecipes = allRecipes
+        .map(recipe => {
+          const recipeIngredients = new Set(
+            recipe.ingredients.map(ing => ing.name.toLowerCase())
+          );
+
+          // Count matching ingredients
+          const matchingIngredients = [...recipeIngredients]
+            .filter(ing => currentIngredients.has(ing));
+
+          const similarity = matchingIngredients.length / recipeIngredients.size;
+
+          return {
+            recipe,
+            similarity,
+            matchingIngredients
+          };
+        })
+        // Filter out recipes with no matching ingredients
+        .filter(({ similarity }) => similarity > 0)
+        // Sort by similarity score descending
+        .sort((a, b) => b.similarity - a.similarity)
+        // Take top 5 suggestions
+        .slice(0, 5);
+
+      res.json(suggestedRecipes);
+    } catch (error) {
+      console.error("Error getting recipe suggestions:", error);
+      res.status(500).json({ message: "Error getting recipe suggestions" });
+    }
   });
 
   const httpServer = createServer(app);

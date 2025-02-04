@@ -18,6 +18,8 @@ import type { Recipe, ShoppingList } from "@/lib/types";
 export default function ShoppingLists() {
   const [search, setSearch] = useState("");
   const [selectedRecipes, setSelectedRecipes] = useState<{id: number, servings: number}[]>([]);
+  const [newListName, setNewListName] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const { data: lists = [] } = useQuery<ShoppingList[]>({
@@ -115,7 +117,7 @@ export default function ShoppingLists() {
     list.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleCreateList = async (name: string) => {
+  const handleCreateList = async () => {
     if (!selectedRecipes.length) {
       toast({
         title: "Error",
@@ -124,14 +126,24 @@ export default function ShoppingLists() {
       });
       return;
     }
-    createMutation.mutate(name);
+    if (!newListName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a list name",
+        variant: "destructive",
+      });
+      return;
+    }
+    await createMutation.mutate(newListName);
+    setNewListName("");
+    setIsDialogOpen(false);
   };
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Shopping Lists</h1>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
@@ -145,11 +157,8 @@ export default function ShoppingLists() {
             <div className="space-y-4">
               <Input
                 placeholder="List name"
-                onChange={(e) => {
-                  if (e.target.value) {
-                    handleCreateList(e.target.value);
-                  }
-                }}
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
               />
               <div className="space-y-2">
                 <h3 className="font-medium">Select Recipes</h3>
@@ -187,6 +196,13 @@ export default function ShoppingLists() {
                   </div>
                 ))}
               </div>
+              <Button
+                className="w-full"
+                onClick={handleCreateList}
+                disabled={createMutation.isPending}
+              >
+                {createMutation.isPending ? "Creating..." : "Create List"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

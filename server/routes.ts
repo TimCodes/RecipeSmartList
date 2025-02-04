@@ -3,7 +3,6 @@ import { createServer, type Server } from "http";
 import { db } from "@db";
 import { eq } from "drizzle-orm";
 import { recipes, shoppingLists, shoppingListRecipes } from "@db/schema";
-import { sql } from "drizzle-orm";
 
 export function registerRoutes(app: Express): Server {
   // Recipe routes
@@ -87,13 +86,9 @@ export function registerRoutes(app: Express): Server {
       return res.status(404).json({ message: "Shopping list not found" });
     }
 
-    const { updatedAt, ...updateData } = req.body;
     const updatedList = await db
       .update(shoppingLists)
-      .set({
-        ...updateData,
-        updatedAt: sql`CURRENT_TIMESTAMP`
-      })
+      .set(req.body)
       .where(eq(shoppingLists.id, parseInt(req.params.id)))
       .returning();
 
@@ -105,12 +100,11 @@ export function registerRoutes(app: Express): Server {
     res.status(204).end();
   });
 
-  // New route for recipe suggestions
+  // Recipe suggestions route
   app.get("/api/shopping-lists/:id/suggestions", async (req, res) => {
     try {
       const listId = parseInt(req.params.id);
 
-      // Get current shopping list with its items
       const list = await db.query.shoppingLists.findFirst({
         where: eq(shoppingLists.id, listId)
       });
@@ -119,14 +113,11 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Shopping list not found" });
       }
 
-      // Get ingredient names from the current shopping list, with null check
       const items = list.items || [];
       const currentIngredients = new Set(items.map(item => item.name.toLowerCase()));
 
-      // Get all recipes
       const allRecipes = await db.query.recipes.findMany();
 
-      // Calculate similarity scores for each recipe
       const suggestedRecipes = allRecipes
         .map(recipe => {
           const ingredients = recipe.ingredients || [];
@@ -134,7 +125,6 @@ export function registerRoutes(app: Express): Server {
             ingredients.map(ing => ing.name.toLowerCase())
           );
 
-          // Count matching ingredients using Array.from instead of spread
           const matchingIngredients = Array.from(recipeIngredients)
             .filter(ing => currentIngredients.has(ing));
 
@@ -146,11 +136,8 @@ export function registerRoutes(app: Express): Server {
             matchingIngredients
           };
         })
-        // Filter out recipes with no matching ingredients
         .filter(({ similarity }) => similarity > 0)
-        // Sort by similarity score descending
         .sort((a, b) => b.similarity - a.similarity)
-        // Take top 5 suggestions
         .slice(0, 5);
 
       res.json(suggestedRecipes);

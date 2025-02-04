@@ -9,8 +9,6 @@ export interface Recipe {
   tags: string[];
   ingredients: Ingredient[];
   instructions: string[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Ingredient {
@@ -23,8 +21,6 @@ export interface ShoppingList {
   id: number;
   name: string;
   items: ShoppingItem[];
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface ShoppingItem extends Ingredient {

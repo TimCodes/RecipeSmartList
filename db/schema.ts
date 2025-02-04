@@ -1,6 +1,5 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-zod";
-import { sql } from "drizzle-orm";
 
 export const recipes = pgTable("recipes", {
   id: serial("id").primaryKey(),
@@ -16,9 +15,7 @@ export const recipes = pgTable("recipes", {
     quantity: number;
     unit: string;
   }[]>().default([]),
-  instructions: jsonb("instructions").$type<string[]>().default([]),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`)
+  instructions: jsonb("instructions").$type<string[]>().default([])
 });
 
 export const shoppingLists = pgTable("shopping_lists", {
@@ -29,9 +26,7 @@ export const shoppingLists = pgTable("shopping_lists", {
     quantity: number;
     unit: string;
     bought: boolean;
-  }[]>().default([]),
-  createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
-  updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`)
+  }[]>().default([])
 });
 
 export const shoppingListRecipes = pgTable("shopping_list_recipes", {
